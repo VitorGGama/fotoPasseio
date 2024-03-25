@@ -1,11 +1,43 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Camera, CameraType } from "expo-camera";
+import { useState } from "react";
+import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function App() {
+  const [tipo, setTipo] = useState(CameraType.back);
+  const [permissao, solicitarPermissao] = Camera.useCameraPermissions();
+
+  if (!permissao) {
+    // As permissões da câmera ainda estão carregando
+    return <View />;
+  }
+
+  if (!permissao.granted) {
+    // As permissões da câmera ainda não foram concedidas
+    return (
+      <View style={styles.container}>
+        <Text style={{ textAlign: "center" }}>
+          Precisamos da sua permissão para mostrar a câmera
+        </Text>
+        <Button onPress={solicitarPermissao} title="conceder permissão" />
+      </View>
+    );
+  }
+
+  function alternarTipoCamera() {
+    setTipo((atual) =>
+      atual === CameraType.back ? CameraType.front : CameraType.back
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
+      <Camera style={styles.camera} type={tipo}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={alternarTipoCamera}>
+            <Text style={styles.text}>Virar Câmera</Text>
+          </TouchableOpacity>
+        </View>
+      </Camera>
     </View>
   );
 }
@@ -13,8 +45,25 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: "center",
+  },
+  camera: {
+    flex: 1,
+  },
+  buttonContainer: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "transparent",
+    margin: 64,
+  },
+  button: {
+    flex: 1,
+    alignSelf: "flex-end",
+    alignItems: "center",
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
   },
 });
