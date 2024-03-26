@@ -4,14 +4,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Permita que o $(PRODUCT_NAME) use sua localização."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "cameraPermission": "Permita que o $(PRODUCT_NAME) acesse sua câmera",
+          "microphonePermission": "Permita que o $(PRODUCT_NAME) acesse seu microfone",
           "recordAudioAndroid": true
         }
       ]

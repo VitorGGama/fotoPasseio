@@ -1,68 +1,151 @@
-import { Camera, CameraType } from "expo-camera";
-import { useState } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Button,
+  TextInput,
+  Image,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  StatusBar,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import * as Location from "expo-location";
+import MapView, { Marker } from "react-native-maps";
+import * as MediaLibrary from "expo-media-library";
+import * as Sharing from "expo-sharing";
 
 export default function App() {
-  const [tipo, setTipo] = useState(CameraType.back);
-  const [permissao, solicitarPermissao] = Camera.useCameraPermissions();
+  const [imagem, setImagem] = useState(null);
+  const [localizacao, setLocalizacao] = useState(null);
+  const [nome, setNome] = useState("");
+  const [mapRegion, setMapRegion] = useState(null);
 
-  if (!permissao) {
-    // As permissões da câmera ainda estão carregando
-    return <View />;
-  }
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissão negada",
+          "Permissão para acessar a localização foi negada"
+        );
+        return;
+      }
 
-  if (!permissao.granted) {
-    // As permissões da câmera ainda não foram concedidas
-    return (
-      <View style={styles.container}>
-        <Text style={{ textAlign: "center" }}>
-          Precisamos da sua permissão para mostrar a câmera
-        </Text>
-      </View>
-    );
-  }
+      let location = await Location.getCurrentPositionAsync({});
+      setLocalizacao(location.coords);
+      setMapRegion({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
+    })();
+  }, []);
 
-  function alternarTipoCamera() {
-    setTipo((atual) =>
-      atual === CameraType.back ? CameraType.front : CameraType.back
-    );
-  }
+  const tirarFoto = async () => {
+    let resultado = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!resultado.canceled && typeof resultado.uri === "string") {
+      const asset = await MediaLibrary.createAssetAsync(resultado.uri);
+      setImagem(asset.uri); // Atualiza o estado para exibir a imagem
+    }
+  };
+
+  const compartilharFoto = async () => {
+    if (imagem && (await Sharing.isAvailableAsync())) {
+      await Sharing.shareAsync(imagem);
+    } else {
+      Alert.alert(
+        "Compartilhamento não disponível",
+        "Não é possível compartilhar a foto no momento."
+      );
+    }
+  };
+
+  const obterLocalizacao = async () => {
+    let { coords } = await Location.getCurrentPositionAsync({});
+    setLocalizacao(coords);
+    setMapRegion({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
+  };
+
+  const voltar = () => {
+    setImagem(null); // Isso irá remover a imagem da tela
+  };
 
   return (
-    <View style={styles.container}>
-      <Camera style={styles.camera} type={tipo}>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={alternarTipoCamera}>
-            <Text style={styles.text}>Virar</Text>
-          </TouchableOpacity>
-        </View>
-      </Camera>
-    </View>
+    <>
+      <StatusBar />
+      <View style={estilos.container}>
+        <TextInput
+          placeholder="Local"
+          value={nome}
+          onChangeText={setNome}
+          style={estilos.entrada}
+        />
+        <Button title="Tirar Foto" onPress={tirarFoto} />
+        {imagem ? (
+          <>
+            <Image source={{ uri: imagem }} style={estilos.imagem} />
+            <Button title="Compartilhar Foto" onPress={compartilharFoto} />
+            <Button title="Voltar" onPress={voltar} />
+          </>
+        ) : (
+          <>
+            <Button title="Obter Localização" onPress={obterLocalizacao} />
+            {mapRegion && (
+              <MapView
+                style={estilos.mapa}
+                region={mapRegion}
+                showsUserLocation={true}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: mapRegion.latitude,
+                    longitude: mapRegion.longitude,
+                  }}
+                  title={nome}
+                />
+              </MapView>
+            )}
+          </>
+        )}
+      </View>
+    </>
   );
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#fff",
+    alignItems: "center",
     justifyContent: "center",
   },
-  camera: {
-    flex: 1,
+  entrada: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+    width: Dimensions.get("window").width * 0.8,
   },
-  buttonContainer: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
+  imagem: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
   },
-  button: {
-    flex: 1,
-    alignSelf: "flex-end",
-    alignItems: "center",
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "white",
+  mapa: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.5,
   },
 });
