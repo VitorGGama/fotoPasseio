@@ -18,7 +18,6 @@ export default function App() {
         <Text style={{ textAlign: "center" }}>
           Precisamos da sua permissão para mostrar a câmera
         </Text>
-        <Button onPress={solicitarPermissao} title="conceder permissão" />
       </View>
     );
   }
@@ -34,7 +33,7 @@ export default function App() {
       <Camera style={styles.camera} type={tipo}>
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={alternarTipoCamera}>
-            <Text style={styles.text}>Virar Câmera</Text>
+            <Text style={styles.text}>Virar</Text>
           </TouchableOpacity>
         </View>
       </Camera>
