@@ -16,7 +16,6 @@ export default function App() {
   const [nome, setNome] = useState("");
   const [localizacao, setLocalizacao] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
-  const [foto, setFoto] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -42,6 +41,31 @@ export default function App() {
     })();
   }, []);
 
+  const tirarFoto = async () => {
+    let resultado = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!resultado.canceled && typeof resultado.uri === "string") {
+      const asset = await MediaLibrary.createAssetAsync(resultado.uri);
+      setImagem(asset.uri); // Atualiza o estado para exibir a imagem
+    }
+  };
+
+  const compartilharFoto = async () => {
+    if (imagem && (await Sharing.isAvailableAsync())) {
+      await Sharing.shareAsync(imagem);
+    } else {
+      Alert.alert(
+        "Compartilhamento não disponível",
+        "Não é possível compartilhar a foto no momento."
+      );
+    }
+  };
+
   const obterLocalizacao = async () => {
     let { coords } = await Location.getCurrentPositionAsync({});
     setLocalizacao(coords);
@@ -53,29 +77,8 @@ export default function App() {
     });
   };
 
-  const escolherFoto = async () => {
-    let resultado = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!resultado.cancelled) {
-      setFoto(resultado.uri);
-    }
-  };
-
-  const acessarCamera = async () => {
-    let imagem = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
-    });
-
-    if (!imagem.cancelled) {
-      setFoto(imagem.uri);
-    }
+  const voltar = () => {
+    setImagem(null); // Isso irá remover a imagem da tela
   };
 
   return (
@@ -88,25 +91,33 @@ export default function App() {
           onChangeText={setNome}
           style={styles.input}
         />
-        <Button title="Obter Localização" onPress={obterLocalizacao} />
-        {mapRegion && (
-          <MapView
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-          >
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title={nome}
-            />
-          </MapView>
+        <Button title="Tirar Foto" onPress={tirarFoto} />
+        {imagem ? (
+          <>
+            <Image source={{ uri: imagem }} style={estilos.imagem} />
+            <Button title="Compartilhar Foto" onPress={compartilharFoto} />
+            <Button title="Voltar" onPress={voltar} />
+          </>
+        ) : (
+          <>
+            <Button title="Obter Localização" onPress={obterLocalizacao} />
+            {mapRegion && (
+              <MapView
+                style={estilos.mapa}
+                region={mapRegion}
+                showsUserLocation={true}
+              >
+                <Marker
+                  coordinate={{
+                    latitude: mapRegion.latitude,
+                    longitude: mapRegion.longitude,
+                  }}
+                  title={nome}
+                />
+              </MapView>
+            )}
+          </>
         )}
-        {foto && <Image source={{ uri: foto }} style={styles.image} />}
-        <Button title="Escolher Foto" onPress={escolherFoto} />
-        <Button title="Tirar Foto" onPress={acessarCamera} />
       </View>
     </>
   );
@@ -126,13 +137,13 @@ const styles = StyleSheet.create({
     padding: 10,
     width: "80%",
   },
-  map: {
-    width: "100%",
-    height: "50%",
+  imagem: {
+    width: 200,
+    height: 200,
+    resizeMode: "contain",
   },
-  image: {
-    width: 300,
-    height: 300,
-    marginTop: 20,
+  mapa: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.5,
   },
 });
