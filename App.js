@@ -172,7 +172,6 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
-    borderRadius: 100, // torna a imagem redonda
     marginTop: 20,
     borderWidth: 3,
     borderColor: "#007bff",
