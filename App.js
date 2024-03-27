@@ -54,6 +54,18 @@ export default function App() {
   };
 
   const escolherFoto = async () => {
+    // Pedir permissão para acessar a galeria
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permissão negada",
+        "Permissão para acessar a galeria foi negada!"
+      );
+      return;
+    }
+
+    // Selecionar a imagem
     let resultado = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -67,6 +79,17 @@ export default function App() {
   };
 
   const acessarCamera = async () => {
+    // Pedir permissão para acessar a câmera
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permissão negada",
+        "Permissão para acessar a câmera foi negada!"
+      );
+      return;
+    }
+
+    // Tirar a foto
     let imagem = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [4, 3],
@@ -118,21 +141,39 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    padding: 20,
   },
   input: {
-    height: 40,
-    margin: 12,
+    height: 50,
+    width: "100%",
+    marginVertical: 15,
     borderWidth: 1,
     padding: 10,
-    width: "80%",
+    borderColor: "#ddd",
+    borderRadius: 10,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    padding: 15,
+    borderRadius: 10,
+    marginVertical: 10,
+    width: "100%",
+  },
+  buttonText: {
+    color: "#fff",
+    textAlign: "center",
   },
   map: {
     width: "100%",
-    height: "50%",
+    height: 300,
+    marginVertical: 15,
   },
   image: {
-    width: 300,
-    height: 300,
+    width: 200,
+    height: 200,
+    borderRadius: 100, // torna a imagem redonda
     marginTop: 20,
+    borderWidth: 3,
+    borderColor: "#007bff",
   },
 });
