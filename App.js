@@ -20,6 +20,7 @@ export default function App() {
   const [localizacao, setLocalizacao] = useState(null);
   const [nome, setNome] = useState("");
   const [mapRegion, setMapRegion] = useState(null);
+  const [fotoTirada, setFotoTirada] = useState(false); // Estado para controlar se a foto foi tirada
 
   useEffect(() => {
     (async () => {
@@ -44,16 +45,26 @@ export default function App() {
   }, []);
 
   const tirarFoto = async () => {
-    let resultado = await ImagePicker.launchCameraAsync({
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        "Permissão negada",
+        "A permissão de câmera é necessária para tirar fotos!"
+      );
+      return;
+    }
+
+    const resultado = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
-    if (!resultado.canceled && typeof resultado.uri === "string") {
+    if (!resultado.cancelled && typeof resultado.uri === "string") {
       const asset = await MediaLibrary.createAssetAsync(resultado.uri);
       setImagem(asset.uri); // Atualiza o estado para exibir a imagem
+      setFotoTirada(true); // Define o estado para indicar que a foto foi tirada
     }
   };
 
@@ -80,7 +91,8 @@ export default function App() {
   };
 
   const voltar = () => {
-    setImagem(null); // Isso irá remover a imagem da tela
+    setImagem(null); // Limpa a imagem
+    setFotoTirada(false); // Define o estado para indicar que a foto não foi tirada
   };
 
   return (
@@ -94,12 +106,12 @@ export default function App() {
           style={estilos.entrada}
         />
         <Button title="Tirar Foto" onPress={tirarFoto} />
-        {imagem ? (
-          <>
+        {fotoTirada && imagem ? (
+          <View style={estilos.imagemContainer}>
             <Image source={{ uri: imagem }} style={estilos.imagem} />
             <Button title="Compartilhar Foto" onPress={compartilharFoto} />
-            <Button title="Voltar" onPress={voltar} />
-          </>
+            <Button title="Voltar" onPress={voltar} /> {/* Botão para voltar à tela inicial */}
+          </View>
         ) : (
           <>
             <Button title="Obter Localização" onPress={obterLocalizacao} />
@@ -139,13 +151,18 @@ const estilos = StyleSheet.create({
     padding: 10,
     width: Dimensions.get("window").width * 0.8,
   },
+  imagemContainer: {
+    alignItems: "center",
+  },
   imagem: {
     width: 200,
     height: 200,
     resizeMode: "contain",
+    marginVertical: 10,
   },
   mapa: {
     width: Dimensions.get("window").width,
     height: Dimensions.get("window").height * 0.5,
+    marginVertical: 10,
   },
 });
