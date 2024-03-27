@@ -11,6 +11,7 @@ import {
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 
 export default function App() {
   const [nome, setNome] = useState("");
@@ -97,7 +98,7 @@ export default function App() {
     });
 
     if (!imagem.cancelled) {
-      setFoto(imagem.uri);
+      setFoto(imagem.assets[0].uri);
     }
   };
 
@@ -106,7 +107,7 @@ export default function App() {
       <StatusBar />
       <View style={styles.container}>
         <TextInput
-          placeholder="Digite o nome do local"
+          placeholder="local"
           value={nome}
           onChangeText={setNome}
           style={styles.input}
