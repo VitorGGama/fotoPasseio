@@ -3,28 +3,26 @@ import {
   View,
   Button,
   TextInput,
-  Image,
   StyleSheet,
-  Dimensions,
   Alert,
   StatusBar,
+  Image,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
-import * as MediaLibrary from "expo-media-library";
-import * as Sharing from "expo-sharing";
+import * as ImagePicker from "expo-image-picker";
 
 export default function App() {
-  const [imagem, setImagem] = useState(null);
-  const [localizacao, setLocalizacao] = useState(null);
   const [nome, setNome] = useState("");
+  const [localizacao, setLocalizacao] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
+  const [foto, setFoto] = useState(null);
 
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
+      const { status: locationStatus } =
+        await Location.requestForegroundPermissionsAsync();
+      if (locationStatus !== "granted") {
         Alert.alert(
           "Permissão negada",
           "Permissão para acessar a localização foi negada"
@@ -32,41 +30,17 @@ export default function App() {
         return;
       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      setLocalizacao(location.coords);
-      setMapRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
+      const { status: cameraStatus } =
+        await ImagePicker.requestCameraPermissionsAsync();
+      if (cameraStatus !== "granted") {
+        Alert.alert(
+          "Permissão negada",
+          "Permissão para acessar a câmera foi negada"
+        );
+        return;
+      }
     })();
   }, []);
-
-  const tirarFoto = async () => {
-    let resultado = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!resultado.canceled && typeof resultado.uri === "string") {
-      const asset = await MediaLibrary.createAssetAsync(resultado.uri);
-      setImagem(asset.uri); // Atualiza o estado para exibir a imagem
-    }
-  };
-
-  const compartilharFoto = async () => {
-    if (imagem && (await Sharing.isAvailableAsync())) {
-      await Sharing.shareAsync(imagem);
-    } else {
-      Alert.alert(
-        "Compartilhamento não disponível",
-        "Não é possível compartilhar a foto no momento."
-      );
-    }
-  };
 
   const obterLocalizacao = async () => {
     let { coords } = await Location.getCurrentPositionAsync({});
@@ -79,73 +53,86 @@ export default function App() {
     });
   };
 
-  const voltar = () => {
-    setImagem(null); // Isso irá remover a imagem da tela
+  const escolherFoto = async () => {
+    let resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!resultado.cancelled) {
+      setFoto(resultado.uri);
+    }
+  };
+
+  const acessarCamera = async () => {
+    let imagem = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+    });
+
+    if (!imagem.cancelled) {
+      setFoto(imagem.uri);
+    }
   };
 
   return (
     <>
       <StatusBar />
-      <View style={estilos.container}>
+      <View style={styles.container}>
         <TextInput
-          placeholder="Local"
+          placeholder="Digite o nome do local"
           value={nome}
           onChangeText={setNome}
-          style={estilos.entrada}
+          style={styles.input}
         />
-        <Button title="Tirar Foto" onPress={tirarFoto} />
-        {imagem ? (
-          <>
-            <Image source={{ uri: imagem }} style={estilos.imagem} />
-            <Button title="Compartilhar Foto" onPress={compartilharFoto} />
-            <Button title="Voltar" onPress={voltar} />
-          </>
-        ) : (
-          <>
-            <Button title="Obter Localização" onPress={obterLocalizacao} />
-            {mapRegion && (
-              <MapView
-                style={estilos.mapa}
-                region={mapRegion}
-                showsUserLocation={true}
-              >
-                <Marker
-                  coordinate={{
-                    latitude: mapRegion.latitude,
-                    longitude: mapRegion.longitude,
-                  }}
-                  title={nome}
-                />
-              </MapView>
-            )}
-          </>
+        <Button title="Obter Localização" onPress={obterLocalizacao} />
+        {mapRegion && (
+          <MapView
+            style={styles.map}
+            region={mapRegion}
+            showsUserLocation={true}
+          >
+            <Marker
+              coordinate={{
+                latitude: mapRegion.latitude,
+                longitude: mapRegion.longitude,
+              }}
+              title={nome}
+            />
+          </MapView>
         )}
+        {foto && <Image source={{ uri: foto }} style={styles.image} />}
+        <Button title="Escolher Foto" onPress={escolherFoto} />
+        <Button title="Tirar Foto" onPress={acessarCamera} />
       </View>
     </>
   );
 }
 
-const estilos = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
-  entrada: {
+  input: {
     height: 40,
     margin: 12,
     borderWidth: 1,
     padding: 10,
-    width: Dimensions.get("window").width * 0.8,
+    width: "80%",
   },
-  imagem: {
-    width: 200,
-    height: 200,
-    resizeMode: "contain",
+  map: {
+    width: "100%",
+    height: "50%",
   },
-  mapa: {
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height * 0.5,
+  image: {
+    width: 300,
+    height: 300,
+    marginTop: 20,
   },
 });
