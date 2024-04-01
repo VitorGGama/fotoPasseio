@@ -124,7 +124,7 @@ export default function App() {
       <StatusBar />
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <View style={styles.container}>
-          <Text style={styles.title}>Seu Aplicativo</Text>
+          <Text style={styles.title}>Foto passeio</Text>
           <TextInput
             placeholder="Digite o nome do local"
             value={nome}
@@ -154,9 +154,7 @@ export default function App() {
               <>
                 <Image source={{ uri: foto }} style={styles.image} />
                 {dataHoraFoto && (
-                  <Text style={styles.dateText}>
-                    Data e Hora: {dataHoraFoto}
-                  </Text>
+                  <Text style={styles.dateText}>{dataHoraFoto}</Text>
                 )}
               </>
             )}
