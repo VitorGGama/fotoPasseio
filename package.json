@@ -20,7 +20,8 @@
     "react": "18.2.0",
     "react-native": "0.73.6",
     "react-native-camera": "^4.2.1",
-    "react-native-maps": "1.10.0"
+    "react-native-maps": "1.10.0",
+    "expo-dev-client": "~3.3.11"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
