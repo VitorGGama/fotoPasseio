@@ -11,15 +11,13 @@ import {
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
-import * as MediaLibrary from "expo-media-library";
-
-/* teste de git*/
 
 export default function App() {
   const [nome, setNome] = useState("");
   const [localizacao, setLocalizacao] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
   const [foto, setFoto] = useState(null);
+  const [fotoTirada, setFotoTirada] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -78,6 +76,7 @@ export default function App() {
 
     if (!resultado.cancelled) {
       setFoto(resultado.uri);
+      setFotoTirada(true);
     }
   };
 
@@ -101,7 +100,13 @@ export default function App() {
 
     if (!imagem.cancelled) {
       setFoto(imagem.assets[0].uri);
+      setFotoTirada(true);
     }
+  };
+
+  const handleBack = () => {
+    setFoto(null);
+    setFotoTirada(false);
   };
 
   return (
@@ -130,7 +135,13 @@ export default function App() {
             />
           </MapView>
         )}
-        {foto && <Image source={{ uri: foto }} style={styles.image} />}
+        {foto && (
+          <Image
+            source={{ uri: foto }}
+            style={[styles.image, { resizeMode: "contain" }]}
+          />
+        )}
+        {fotoTirada && <Button title="Voltar" onPress={handleBack} />}
         <Button title="Escolher Foto" onPress={escolherFoto} />
         <Button title="Tirar Foto" onPress={acessarCamera} />
       </View>
@@ -154,17 +165,6 @@ const styles = StyleSheet.create({
     padding: 10,
     borderColor: "#ddd",
     borderRadius: 10,
-  },
-  button: {
-    backgroundColor: "#007bff",
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-    width: "100%",
-  },
-  buttonText: {
-    color: "#fff",
-    textAlign: "center",
   },
   map: {
     width: "100%",
