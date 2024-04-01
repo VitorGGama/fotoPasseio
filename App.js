@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  TouchableOpacity,
+  Pressable,
   TextInput,
   StyleSheet,
   Alert,
@@ -15,17 +15,22 @@ import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
+import { AsyncStorage } from "react-native"; // Adicionando import do AsyncStorage
+import { FlatList } from "react-native"; // Adicionando import da FlatList
 
 const { width, height } = Dimensions.get("window");
 
 export default function App() {
+  // Definição dos estados usando useState
   const [nome, setNome] = useState("");
   const [localizacao, setLocalizacao] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
   const [foto, setFoto] = useState(null);
   const [fotoTirada, setFotoTirada] = useState(false);
   const [dataHoraFoto, setDataHoraFoto] = useState(null);
+  const [lugares, setLugares] = useState([]); // Adicionando estado para armazenar os lugares visitados
 
+  // Efeito colateral para obter permissões de localização e câmera ao carregar o componente
   useEffect(() => {
     (async () => {
       const { status: locationStatus } =
@@ -50,6 +55,7 @@ export default function App() {
     })();
   }, []);
 
+  // Função para obter a localização atual e salvar no AsyncStorage
   const obterLocalizacao = async () => {
     let { coords } = await Location.getCurrentPositionAsync({});
     setLocalizacao(coords);
@@ -59,10 +65,12 @@ export default function App() {
       latitudeDelta: 0.0922,
       longitudeDelta: 0.0421,
     });
+
+    await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords));
   };
 
+  // Função para escolher uma foto da galeria
   const escolherFoto = async () => {
-    // Pedir permissão para acessar a galeria
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -73,7 +81,6 @@ export default function App() {
       return;
     }
 
-    // Selecionar a imagem
     let resultado = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -88,8 +95,8 @@ export default function App() {
     }
   };
 
+  // Função para acessar a câmera e tirar uma foto
   const acessarCamera = async () => {
-    // Pedir permissão para acessar a câmera
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
       Alert.alert(
@@ -99,7 +106,6 @@ export default function App() {
       return;
     }
 
-    // Tirar a foto
     let imagem = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [4, 3],
@@ -113,71 +119,103 @@ export default function App() {
     }
   };
 
+  // Função para lidar com o retorno para a foto anterior
   const handleBack = () => {
     setFoto(null);
     setFotoTirada(false);
     setDataHoraFoto(null);
   };
 
+  // Renderização do componente
   return (
     <>
       <StatusBar />
-      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Foto passeio</Text>
-          <TextInput
-            placeholder="Digite o nome do local"
-            placeholderTextColor="white"
-            value={nome}
-            onChangeText={setNome}
-            style={styles.input}
-          />
-          <TouchableOpacity style={styles.button} onPress={obterLocalizacao}>
-            <Text style={styles.buttonText}>Obter Localização</Text>
-          </TouchableOpacity>
-          {mapRegion && (
-            <MapView
-              style={styles.map}
-              region={mapRegion}
-              showsUserLocation={true}
-            >
-              <Marker
-                coordinate={{
-                  latitude: mapRegion.latitude,
-                  longitude: mapRegion.longitude,
-                }}
-                title={nome}
-              />
-            </MapView>
+
+      {/* View principal do aplicativo */}
+      <View style={styles.container}>
+        {/* Título do aplicativo */}
+        <Text style={styles.title}>Foto passeio</Text>
+
+        {/* Input para inserir o nome do local */}
+        <TextInput
+          placeholder="Digite o nome do local"
+          placeholderTextColor="white"
+          value={nome}
+          onChangeText={setNome}
+          style={styles.input}
+        />
+
+        {/* Botão para obter a localização */}
+        <Pressable style={styles.button} onPress={obterLocalizacao}>
+          <Text style={styles.buttonText}>Obter Localização</Text>
+        </Pressable>
+
+        {/* Mapa para exibir a localização atual */}
+        {mapRegion && (
+          <MapView
+            style={styles.map}
+            region={mapRegion}
+            showsUserLocation={true}
+          >
+            <Marker
+              coordinate={{
+                latitude: mapRegion.latitude,
+                longitude: mapRegion.longitude,
+              }}
+              title={nome}
+            />
+          </MapView>
+        )}
+
+        {/* Container para exibir a foto */}
+        <View style={styles.photoContainer}>
+          {foto && (
+            <>
+              <Image source={{ uri: foto }} style={styles.image} />
+              {dataHoraFoto && (
+                <Text style={styles.dateText}>{dataHoraFoto}</Text>
+              )}
+            </>
           )}
-          <View style={styles.photoContainer}>
-            {foto && (
-              <>
-                <Image source={{ uri: foto }} style={styles.image} />
-                {dataHoraFoto && (
-                  <Text style={styles.dateText}>{dataHoraFoto}</Text>
-                )}
-              </>
-            )}
-            {fotoTirada && (
-              <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                <Ionicons name="arrow-back" size={24} color="white" />
-                <Text style={styles.backButtonText}>Voltar</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <TouchableOpacity style={styles.button} onPress={escolherFoto}>
-            <Text style={styles.buttonText}>Escolher Foto</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={acessarCamera}>
-            <Text style={styles.buttonText}>Tirar Foto</Text>
-          </TouchableOpacity>
+          {/* Botão para voltar para a foto anterior */}
+          {fotoTirada && (
+            <Pressable style={styles.backButton} onPress={handleBack}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+              <Text style={styles.backButtonText}>Voltar</Text>
+            </Pressable>
+          )}
         </View>
-      </ScrollView>
+
+        {/* Botão para escolher uma foto da galeria */}
+        <Pressable style={styles.button} onPress={escolherFoto}>
+          <Text style={styles.buttonText}>Escolher Foto</Text>
+        </Pressable>
+
+        {/* Botão para acessar a câmera e tirar uma foto */}
+        <Pressable style={styles.button} onPress={acessarCamera}>
+          <Text style={styles.buttonText}>Tirar Foto</Text>
+        </Pressable>
+
+        {/* Lista de lugares visitados */}
+        <FlatList
+          data={lugares}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <View>
+              <Text>{item.nome}</Text>
+              <Image
+                source={{ uri: item.foto }}
+                style={{ width: 100, height: 100 }}
+              />
+            </View>
+          )}
+        />
+      </View>
     </>
   );
 }
 
+// Estilos do componente
 const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
