@@ -92,7 +92,7 @@ export default function App() {
       quality: 1,
     });
 
-    if (!resultado.cancelled) {
+    if (!resultado.canceled) {
       setFoto(resultado.uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
@@ -115,7 +115,7 @@ export default function App() {
       quality: 0.5,
     });
 
-    if (!imagem.cancelled) {
+    if (!imagem.canceled) {
       setFoto(imagem.assets[0].uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
