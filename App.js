@@ -13,6 +13,8 @@ import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
 
+/* teste de git*/
+
 export default function App() {
   const [nome, setNome] = useState("");
   const [localizacao, setLocalizacao] = useState(null);
