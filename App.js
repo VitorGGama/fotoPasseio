@@ -4,33 +4,32 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
-  Alert,
   StatusBar,
   Image,
   Text,
-  ScrollView,
   Dimensions,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
-import { AsyncStorage } from "react-native"; // Adicionando import do AsyncStorage
-import { FlatList } from "react-native"; // Adicionando import da FlatList
+import { AsyncStorage } from "react-native";
+import { FlatList } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
 export default function App() {
-  // Definição dos estados usando useState
   const [nome, setNome] = useState("");
   const [localizacao, setLocalizacao] = useState(null);
   const [mapRegion, setMapRegion] = useState(null);
   const [foto, setFoto] = useState(null);
   const [fotoTirada, setFotoTirada] = useState(false);
   const [dataHoraFoto, setDataHoraFoto] = useState(null);
-  const [lugares, setLugares] = useState([]); // Adicionando estado para armazenar os lugares visitados
+  const [lugares, setLugares] = useState([]);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
-  // Efeito colateral para obter permissões de localização e câmera ao carregar o componente
   useEffect(() => {
     (async () => {
       const { status: locationStatus } =
@@ -55,21 +54,26 @@ export default function App() {
     })();
   }, []);
 
-  // Função para obter a localização atual e salvar no AsyncStorage
   const obterLocalizacao = async () => {
-    let { coords } = await Location.getCurrentPositionAsync({});
-    setLocalizacao(coords);
-    setMapRegion({
-      latitude: coords.latitude,
-      longitude: coords.longitude,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    });
+    setLoadingLocation(true);
+    try {
+      let { coords } = await Location.getCurrentPositionAsync({});
+      setLocalizacao(coords);
+      setMapRegion({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      });
 
-    await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords));
+      await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords));
+    } catch (error) {
+      console.error("Erro ao obter localização:", error);
+    } finally {
+      setLoadingLocation(false);
+    }
   };
 
-  // Função para escolher uma foto da galeria
   const escolherFoto = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -95,7 +99,6 @@ export default function App() {
     }
   };
 
-  // Função para acessar a câmera e tirar uma foto
   const acessarCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -119,24 +122,17 @@ export default function App() {
     }
   };
 
-  // Função para lidar com o retorno para a foto anterior
   const handleBack = () => {
     setFoto(null);
     setFotoTirada(false);
     setDataHoraFoto(null);
   };
 
-  // Renderização do componente
   return (
-    <>
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <StatusBar />
-
-      {/* View principal do aplicativo */}
       <View style={styles.container}>
-        {/* Título do aplicativo */}
         <Text style={styles.title}>Foto passeio</Text>
-
-        {/* Input para inserir o nome do local */}
         <TextInput
           placeholder="Digite o nome do local"
           placeholderTextColor="white"
@@ -144,13 +140,10 @@ export default function App() {
           onChangeText={setNome}
           style={styles.input}
         />
-
-        {/* Botão para obter a localização */}
         <Pressable style={styles.button} onPress={obterLocalizacao}>
           <Text style={styles.buttonText}>Obter Localização</Text>
         </Pressable>
-
-        {/* Mapa para exibir a localização atual */}
+        {loadingLocation && <ActivityIndicator color="#fff" />}
         {mapRegion && (
           <MapView
             style={styles.map}
@@ -166,8 +159,6 @@ export default function App() {
             />
           </MapView>
         )}
-
-        {/* Container para exibir a foto */}
         <View style={styles.photoContainer}>
           {foto && (
             <>
@@ -177,7 +168,6 @@ export default function App() {
               )}
             </>
           )}
-          {/* Botão para voltar para a foto anterior */}
           {fotoTirada && (
             <Pressable style={styles.backButton} onPress={handleBack}>
               <Ionicons name="arrow-back" size={24} color="white" />
@@ -185,18 +175,12 @@ export default function App() {
             </Pressable>
           )}
         </View>
-
-        {/* Botão para escolher uma foto da galeria */}
         <Pressable style={styles.button} onPress={escolherFoto}>
           <Text style={styles.buttonText}>Escolher Foto</Text>
         </Pressable>
-
-        {/* Botão para acessar a câmera e tirar uma foto */}
         <Pressable style={styles.button} onPress={acessarCamera}>
           <Text style={styles.buttonText}>Tirar Foto</Text>
         </Pressable>
-
-        {/* Lista de lugares visitados */}
         <FlatList
           data={lugares}
           keyExtractor={(item, index) => index.toString()}
@@ -211,11 +195,10 @@ export default function App() {
           )}
         />
       </View>
-    </>
+    </ScrollView>
   );
 }
 
-// Estilos do componente
 const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
