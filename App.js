@@ -127,6 +127,7 @@ export default function App() {
           <Text style={styles.title}>Foto passeio</Text>
           <TextInput
             placeholder="Digite o nome do local"
+            placeholderTextColor="white"
             value={nome}
             onChangeText={setNome}
             style={styles.input}
