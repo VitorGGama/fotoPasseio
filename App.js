@@ -7,6 +7,8 @@ import {
   Alert,
   StatusBar,
   Image,
+  Text,
+  ScrollView,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
@@ -18,6 +20,7 @@ export default function App() {
   const [mapRegion, setMapRegion] = useState(null);
   const [foto, setFoto] = useState(null);
   const [fotoTirada, setFotoTirada] = useState(false);
+  const [dataHoraFoto, setDataHoraFoto] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -77,6 +80,7 @@ export default function App() {
     if (!resultado.cancelled) {
       setFoto(resultado.uri);
       setFotoTirada(true);
+      setDataHoraFoto(new Date().toLocaleString());
     }
   };
 
@@ -101,55 +105,66 @@ export default function App() {
     if (!imagem.cancelled) {
       setFoto(imagem.assets[0].uri);
       setFotoTirada(true);
+      setDataHoraFoto(new Date().toLocaleString());
     }
   };
 
   const handleBack = () => {
     setFoto(null);
     setFotoTirada(false);
+    setDataHoraFoto(null);
   };
 
   return (
     <>
       <StatusBar />
-      <View style={styles.container}>
-        <TextInput
-          placeholder="local"
-          value={nome}
-          onChangeText={setNome}
-          style={styles.input}
-        />
-        <Button title="Obter Localização" onPress={obterLocalizacao} />
-        {mapRegion && (
-          <MapView
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-          >
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title={nome}
-            />
-          </MapView>
-        )}
-        {foto && (
-          <Image
-            source={{ uri: foto }}
-            style={[styles.image, { resizeMode: "contain" }]}
+      <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+        <View style={styles.container}>
+          <TextInput
+            placeholder="local"
+            value={nome}
+            onChangeText={setNome}
+            style={styles.input}
           />
-        )}
-        {fotoTirada && <Button title="Voltar" onPress={handleBack} />}
-        <Button title="Escolher Foto" onPress={escolherFoto} />
-        <Button title="Tirar Foto" onPress={acessarCamera} />
-      </View>
+          <Button title="Obter Localização" onPress={obterLocalizacao} />
+          {mapRegion && (
+            <MapView
+              style={styles.map}
+              region={mapRegion}
+              showsUserLocation={true}
+            >
+              <Marker
+                coordinate={{
+                  latitude: mapRegion.latitude,
+                  longitude: mapRegion.longitude,
+                }}
+                title={nome}
+              />
+            </MapView>
+          )}
+          {foto && (
+            <>
+              <Image
+                source={{ uri: foto }}
+                style={[styles.image, { resizeMode: "contain" }]}
+              />
+              {dataHoraFoto && <Text>Data e Hora: {dataHoraFoto}</Text>}
+            </>
+          )}
+          {fotoTirada && <Button title="Voltar" onPress={handleBack} />}
+          <Button title="Escolher Foto" onPress={escolherFoto} />
+          <Button title="Tirar Foto" onPress={acessarCamera} />
+        </View>
+      </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  scrollViewContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
