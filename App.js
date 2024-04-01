@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Button,
+  TouchableOpacity,
   TextInput,
   StyleSheet,
   Alert,
@@ -9,10 +9,14 @@ import {
   Image,
   Text,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width, height } = Dimensions.get("window");
 
 export default function App() {
   const [nome, setNome] = useState("");
@@ -120,13 +124,16 @@ export default function App() {
       <StatusBar />
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <View style={styles.container}>
+          <Text style={styles.title}>Seu Aplicativo</Text>
           <TextInput
-            placeholder="local"
+            placeholder="Digite o nome do local"
             value={nome}
             onChangeText={setNome}
             style={styles.input}
           />
-          <Button title="Obter Localização" onPress={obterLocalizacao} />
+          <TouchableOpacity style={styles.button} onPress={obterLocalizacao}>
+            <Text style={styles.buttonText}>Obter Localização</Text>
+          </TouchableOpacity>
           {mapRegion && (
             <MapView
               style={styles.map}
@@ -142,18 +149,30 @@ export default function App() {
               />
             </MapView>
           )}
-          {foto && (
-            <>
-              <Image
-                source={{ uri: foto }}
-                style={[styles.image, { resizeMode: "contain" }]}
-              />
-              {dataHoraFoto && <Text>Data e Hora: {dataHoraFoto}</Text>}
-            </>
-          )}
-          {fotoTirada && <Button title="Voltar" onPress={handleBack} />}
-          <Button title="Escolher Foto" onPress={escolherFoto} />
-          <Button title="Tirar Foto" onPress={acessarCamera} />
+          <View style={styles.photoContainer}>
+            {foto && (
+              <>
+                <Image source={{ uri: foto }} style={styles.image} />
+                {dataHoraFoto && (
+                  <Text style={styles.dateText}>
+                    Data e Hora: {dataHoraFoto}
+                  </Text>
+                )}
+              </>
+            )}
+            {fotoTirada && (
+              <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+                <Text style={styles.backButtonText}>Voltar</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <TouchableOpacity style={styles.button} onPress={escolherFoto}>
+            <Text style={styles.buttonText}>Escolher Foto</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={acessarCamera}>
+            <Text style={styles.buttonText}>Tirar Foto</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </>
@@ -167,30 +186,70 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#111",
     alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
+    paddingVertical: 40,
+  },
+  title: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
   },
   input: {
+    width: width * 0.8,
     height: 50,
-    width: "100%",
-    marginVertical: 15,
     borderWidth: 1,
-    padding: 10,
-    borderColor: "#ddd",
+    borderColor: "#fff",
     borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    color: "#fff",
+  },
+  button: {
+    width: width * 0.8,
+    backgroundColor: "#007bff",
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   map: {
-    width: "100%",
-    height: 300,
-    marginVertical: 15,
+    width: width * 0.8,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 20,
+  },
+  photoContainer: {
+    alignItems: "center",
+    marginBottom: 20,
   },
   image: {
-    width: 200,
-    height: 200,
-    marginTop: 20,
-    borderWidth: 3,
-    borderColor: "#007bff",
+    width: width * 0.8,
+    height: height * 0.4,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  dateText: {
+    color: "#fff",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 10,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 5,
   },
 });
