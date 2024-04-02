@@ -15,7 +15,7 @@ import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps"; // Importa o MapView e o Marker do pacote react-native-maps
 import * as ImagePicker from "expo-image-picker"; // Importa o ImagePicker do Expo
 import { Ionicons } from "@expo/vector-icons"; // Importa o Ionicons do Expo
-import { AsyncStorage } from "react-native"; // Adicionando import do AsyncStorage
+import AsyncStorage from "@react-native-async-storage/async-storage"; // Adicionando import do AsyncStorage
 import { FlatList } from "react-native"; // Adicionando import da FlatList
 
 const { width, height } = Dimensions.get("window"); // Obtém as dimensões da tela
@@ -23,7 +23,7 @@ const { width, height } = Dimensions.get("window"); // Obtém as dimensões da t
 export default function App() {
   // Definição dos estados usando useState
   const [nome, setNome] = useState(""); // Estado para o nome do local
-  const [localizacao, setLocalizacao] = useState(null); // Estado para a localização
+  const [localizacao, setLocalizacao] = useState([]); // Estado para a localização
   const [mapRegion, setMapRegion] = useState(null); // Estado para a região do mapa
   const [foto, setFoto] = useState(null); // Estado para a foto tirada
   const [fotoTirada, setFotoTirada] = useState(false); // Estado para indicar se uma foto foi tirada ou não
@@ -135,6 +135,9 @@ export default function App() {
     setDataHoraFoto(null); // Limpa a data e hora da foto
   };
 
+  /* Transforma objeto em array para função do map */
+  const localizacaoArray = Object.entries(localizacao);
+
   // Renderização do componente
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -207,19 +210,16 @@ export default function App() {
           </Pressable>
 
           {/* Lista de lugares visitados */}
-          <FlatList
-            data={lugares}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View>
-                <Text>{item.nome}</Text>
-                <Image
-                  source={{ uri: item.foto }}
-                  style={{ width: 100, height: 100 }}
-                />
-              </View>
-            )}
-          />
+
+          {localizacaoArray.map((item, index) => {
+            <View key={index}>
+              <Text>{item.nome}</Text>
+              <Image
+                source={{ uri: item.foto }}
+                style={{ width: 100, height: 100 }}
+              />
+            </View>;
+          })}
         </View>
       </>
     </ScrollView>
