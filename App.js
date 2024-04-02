@@ -15,22 +15,20 @@ import * as Location from "expo-location";
 import MapView, { Marker } from "react-native-maps";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
-import { AsyncStorage } from "react-native"; // Adicionando import do AsyncStorage
-import { FlatList } from "react-native"; // Adicionando import da FlatList
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FlatList } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
 export default function App() {
-  // Definição dos estados usando useState
   const [nome, setNome] = useState("");
-  const [localizacao, setLocalizacao] = useState(null);
+  const [localizacao, setLocalizacao] = useState([]);
   const [mapRegion, setMapRegion] = useState(null);
   const [foto, setFoto] = useState(null);
   const [fotoTirada, setFotoTirada] = useState(false);
   const [dataHoraFoto, setDataHoraFoto] = useState(null);
-  const [lugares, setLugares] = useState([]); // Adicionando estado para armazenar os lugares visitados
+  const [lugares, setLugares] = useState([]);
 
-  // Efeito colateral para obter permissões de localização e câmera ao carregar o componente
   useEffect(() => {
     (async () => {
       const { status: locationStatus } =
@@ -55,7 +53,6 @@ export default function App() {
     })();
   }, []);
 
-  // Função para obter a localização atual e salvar no AsyncStorage
   const obterLocalizacao = async () => {
     let { coords } = await Location.getCurrentPositionAsync({});
     setLocalizacao(coords);
@@ -69,7 +66,6 @@ export default function App() {
     await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords));
   };
 
-  // Função para escolher uma foto da galeria
   const escolherFoto = async () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -89,13 +85,14 @@ export default function App() {
     });
 
     if (!resultado.canceled) {
-      setFoto(resultado.uri);
+      setFoto(resultado.assets[0].uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
+
+      setLugares([...lugares, { nome: nome, foto: resultado.uri }]);
     }
   };
 
-  // Função para acessar a câmera e tirar uma foto
   const acessarCamera = async () => {
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     if (permissionResult.granted === false) {
@@ -116,28 +113,25 @@ export default function App() {
       setFoto(imagem.assets[0].uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
+
+      setLugares([...lugares, { nome: nome, foto: imagem.uri }]);
     }
   };
 
-  // Função para lidar com o retorno para a foto anterior
   const handleBack = () => {
     setFoto(null);
     setFotoTirada(false);
     setDataHoraFoto(null);
   };
 
-  // Renderização do componente
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <>
         <StatusBar />
 
-        {/* View principal do aplicativo */}
         <View style={styles.container}>
-          {/* Título do aplicativo */}
           <Text style={styles.title}>Foto passeio</Text>
 
-          {/* Input para inserir o nome do local */}
           <TextInput
             placeholder="Digite o nome do local"
             placeholderTextColor="white"
@@ -146,12 +140,10 @@ export default function App() {
             style={styles.input}
           />
 
-          {/* Botão para obter a localização */}
           <Pressable style={styles.button} onPress={obterLocalizacao}>
             <Text style={styles.buttonText}>Obter Localização</Text>
           </Pressable>
 
-          {/* Mapa para exibir a localização atual */}
           {mapRegion && (
             <MapView
               style={styles.map}
@@ -168,17 +160,16 @@ export default function App() {
             </MapView>
           )}
 
-          {/* Container para exibir a foto */}
           <View style={styles.photoContainer}>
             {foto && (
               <>
-                <Image source={{ uri: foto }} style={styles.image} />
+                <Image source={{ uri: `${foto}` }} style={styles.image} />
                 {dataHoraFoto && (
                   <Text style={styles.dateText}>{dataHoraFoto}</Text>
                 )}
               </>
             )}
-            {/* Botão para voltar para a foto anterior */}
+
             {fotoTirada && (
               <Pressable style={styles.backButton} onPress={handleBack}>
                 <Ionicons name="arrow-back" size={24} color="white" />
@@ -187,37 +178,29 @@ export default function App() {
             )}
           </View>
 
-          {/* Botão para escolher uma foto da galeria */}
           <Pressable style={styles.button} onPress={escolherFoto}>
             <Text style={styles.buttonText}>Escolher Foto</Text>
           </Pressable>
 
-          {/* Botão para acessar a câmera e tirar uma foto */}
           <Pressable style={styles.button} onPress={acessarCamera}>
             <Text style={styles.buttonText}>Tirar Foto</Text>
           </Pressable>
 
-          {/* Lista de lugares visitados */}
-          <FlatList
-            data={lugares}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View>
-                <Text>{item.nome}</Text>
-                <Image
-                  source={{ uri: item.foto }}
-                  style={{ width: 100, height: 100 }}
-                />
-              </View>
-            )}
-          />
+          {lugares.map((lugar, index) => (
+            <View key={index}>
+              <Text>{lugar.nome}</Text>
+              <Image
+                source={{ uri: lugar.foto }}
+                style={{ width: 100, height: 100 }}
+              />
+            </View>
+          ))}
         </View>
       </>
     </ScrollView>
   );
 }
 
-// Estilos do componente
 const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
@@ -260,7 +243,7 @@ const styles = StyleSheet.create({
   },
   map: {
     width: width * 0.8,
-    height: 200,
+    height: height * 0.4,
     borderRadius: 10,
     marginBottom: 20,
   },
