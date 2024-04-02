@@ -88,7 +88,7 @@ export default function App() {
       quality: 1,
     });
 
-    if (!resultado.cancelled) {
+    if (!resultado.canceled) {
       setFoto(resultado.uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
@@ -112,7 +112,7 @@ export default function App() {
       quality: 0.5,
     });
 
-    if (!imagem.cancelled) {
+    if (!imagem.canceled) {
       setFoto(imagem.assets[0].uri);
       setFotoTirada(true);
       setDataHoraFoto(new Date().toLocaleString());
@@ -128,90 +128,92 @@ export default function App() {
 
   // Renderização do componente
   return (
-    <>
-      <StatusBar />
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      <>
+        <StatusBar />
 
-      {/* View principal do aplicativo */}
-      <View style={styles.container}>
-        {/* Título do aplicativo */}
-        <Text style={styles.title}>Foto passeio</Text>
+        {/* View principal do aplicativo */}
+        <View style={styles.container}>
+          {/* Título do aplicativo */}
+          <Text style={styles.title}>Foto passeio</Text>
 
-        {/* Input para inserir o nome do local */}
-        <TextInput
-          placeholder="Digite o nome do local"
-          placeholderTextColor="white"
-          value={nome}
-          onChangeText={setNome}
-          style={styles.input}
-        />
+          {/* Input para inserir o nome do local */}
+          <TextInput
+            placeholder="Digite o nome do local"
+            placeholderTextColor="white"
+            value={nome}
+            onChangeText={setNome}
+            style={styles.input}
+          />
 
-        {/* Botão para obter a localização */}
-        <Pressable style={styles.button} onPress={obterLocalizacao}>
-          <Text style={styles.buttonText}>Obter Localização</Text>
-        </Pressable>
+          {/* Botão para obter a localização */}
+          <Pressable style={styles.button} onPress={obterLocalizacao}>
+            <Text style={styles.buttonText}>Obter Localização</Text>
+          </Pressable>
 
-        {/* Mapa para exibir a localização atual */}
-        {mapRegion && (
-          <MapView
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-          >
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title={nome}
-            />
-          </MapView>
-        )}
-
-        {/* Container para exibir a foto */}
-        <View style={styles.photoContainer}>
-          {foto && (
-            <>
-              <Image source={{ uri: foto }} style={styles.image} />
-              {dataHoraFoto && (
-                <Text style={styles.dateText}>{dataHoraFoto}</Text>
-              )}
-            </>
-          )}
-          {/* Botão para voltar para a foto anterior */}
-          {fotoTirada && (
-            <Pressable style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-              <Text style={styles.backButtonText}>Voltar</Text>
-            </Pressable>
-          )}
-        </View>
-
-        {/* Botão para escolher uma foto da galeria */}
-        <Pressable style={styles.button} onPress={escolherFoto}>
-          <Text style={styles.buttonText}>Escolher Foto</Text>
-        </Pressable>
-
-        {/* Botão para acessar a câmera e tirar uma foto */}
-        <Pressable style={styles.button} onPress={acessarCamera}>
-          <Text style={styles.buttonText}>Tirar Foto</Text>
-        </Pressable>
-
-        {/* Lista de lugares visitados */}
-        <FlatList
-          data={lugares}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View>
-              <Text>{item.nome}</Text>
-              <Image
-                source={{ uri: item.foto }}
-                style={{ width: 100, height: 100 }}
+          {/* Mapa para exibir a localização atual */}
+          {mapRegion && (
+            <MapView
+              style={styles.map}
+              region={mapRegion}
+              showsUserLocation={true}
+            >
+              <Marker
+                coordinate={{
+                  latitude: mapRegion.latitude,
+                  longitude: mapRegion.longitude,
+                }}
+                title={nome}
               />
-            </View>
+            </MapView>
           )}
-        />
-      </View>
-    </>
+
+          {/* Container para exibir a foto */}
+          <View style={styles.photoContainer}>
+            {foto && (
+              <>
+                <Image source={{ uri: foto }} style={styles.image} />
+                {dataHoraFoto && (
+                  <Text style={styles.dateText}>{dataHoraFoto}</Text>
+                )}
+              </>
+            )}
+            {/* Botão para voltar para a foto anterior */}
+            {fotoTirada && (
+              <Pressable style={styles.backButton} onPress={handleBack}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+                <Text style={styles.backButtonText}>Voltar</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Botão para escolher uma foto da galeria */}
+          <Pressable style={styles.button} onPress={escolherFoto}>
+            <Text style={styles.buttonText}>Escolher Foto</Text>
+          </Pressable>
+
+          {/* Botão para acessar a câmera e tirar uma foto */}
+          <Pressable style={styles.button} onPress={acessarCamera}>
+            <Text style={styles.buttonText}>Tirar Foto</Text>
+          </Pressable>
+
+          {/* Lista de lugares visitados */}
+          <FlatList
+            data={lugares}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View>
+                <Text>{item.nome}</Text>
+                <Image
+                  source={{ uri: item.foto }}
+                  style={{ width: 100, height: 100 }}
+                />
+              </View>
+            )}
+          />
+        </View>
+      </>
+    </ScrollView>
   );
 }
 
