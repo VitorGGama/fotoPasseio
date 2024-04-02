@@ -4,37 +4,39 @@ import {
   Pressable,
   TextInput,
   StyleSheet,
+  Alert,
   StatusBar,
   Image,
   Text,
-  Dimensions,
-  ActivityIndicator,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import * as Location from "expo-location";
-import MapView, { Marker } from "react-native-maps";
-import * as ImagePicker from "expo-image-picker";
-import { Ionicons } from "@expo/vector-icons";
-import { AsyncStorage } from "react-native";
-import { FlatList } from "react-native";
+import MapView, { Marker } from "react-native-maps"; // Importa o MapView e o Marker do pacote react-native-maps
+import * as ImagePicker from "expo-image-picker"; // Importa o ImagePicker do Expo
+import { Ionicons } from "@expo/vector-icons"; // Importa o Ionicons do Expo
+import { AsyncStorage } from "react-native"; // Adicionando import do AsyncStorage
+import { FlatList } from "react-native"; // Adicionando import da FlatList
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window"); // Obtém as dimensões da tela
 
 export default function App() {
-  const [nome, setNome] = useState("");
-  const [localizacao, setLocalizacao] = useState(null);
-  const [mapRegion, setMapRegion] = useState(null);
-  const [foto, setFoto] = useState(null);
-  const [fotoTirada, setFotoTirada] = useState(false);
-  const [dataHoraFoto, setDataHoraFoto] = useState(null);
-  const [lugares, setLugares] = useState([]);
-  const [loadingLocation, setLoadingLocation] = useState(false);
+  // Definição dos estados usando useState
+  const [nome, setNome] = useState(""); // Estado para o nome do local
+  const [localizacao, setLocalizacao] = useState(null); // Estado para a localização
+  const [mapRegion, setMapRegion] = useState(null); // Estado para a região do mapa
+  const [foto, setFoto] = useState(null); // Estado para a foto tirada
+  const [fotoTirada, setFotoTirada] = useState(false); // Estado para indicar se uma foto foi tirada ou não
+  const [dataHoraFoto, setDataHoraFoto] = useState(null); // Estado para armazenar a data e hora da foto
+  const [lugares, setLugares] = useState([]); // Estado para armazenar os lugares visitados
 
+  // Efeito colateral para obter permissões de localização e câmera ao carregar o componente
   useEffect(() => {
     (async () => {
       const { status: locationStatus } =
-        await Location.requestForegroundPermissionsAsync();
+        await Location.requestForegroundPermissionsAsync(); // Solicita permissão para acessar a localização do dispositivo
       if (locationStatus !== "granted") {
+        // Se a permissão não foi concedida
         Alert.alert(
           "Permissão negada",
           "Permissão para acessar a localização foi negada"
@@ -43,8 +45,9 @@ export default function App() {
       }
 
       const { status: cameraStatus } =
-        await ImagePicker.requestCameraPermissionsAsync();
+        await ImagePicker.requestCameraPermissionsAsync(); // Solicita permissão para acessar a câmera do dispositivo
       if (cameraStatus !== "granted") {
+        // Se a permissão não foi concedida
         Alert.alert(
           "Permissão negada",
           "Permissão para acessar a câmera foi negada"
@@ -52,32 +55,29 @@ export default function App() {
         return;
       }
     })();
-  }, []);
+  }, []); // O segundo parâmetro vazio [] indica que esse efeito é executado apenas uma vez, quando o componente é montado
 
+  // Função para obter a localização atual e salvar no AsyncStorage
   const obterLocalizacao = async () => {
-    setLoadingLocation(true);
-    try {
-      let { coords } = await Location.getCurrentPositionAsync({});
-      setLocalizacao(coords);
-      setMapRegion({
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
+    let { coords } = await Location.getCurrentPositionAsync({}); // Obtém as coordenadas da localização atual do dispositivo
+    setLocalizacao(coords); // Define as coordenadas da localização
+    setMapRegion({
+      // Define a região do mapa para mostrar a localização atual
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    });
 
-      await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords));
-    } catch (error) {
-      console.error("Erro ao obter localização:", error);
-    } finally {
-      setLoadingLocation(false);
-    }
+    await AsyncStorage.setItem("ultimaLocalizacao", JSON.stringify(coords)); // Salva as coordenadas da última localização no AsyncStorage
   };
 
+  // Função para escolher uma foto da galeria
   const escolherFoto = async () => {
     const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+      await ImagePicker.requestMediaLibraryPermissionsAsync(); // Solicita permissão para acessar a galeria do dispositivo
     if (permissionResult.granted === false) {
+      // Se a permissão não foi concedida
       Alert.alert(
         "Permissão negada",
         "Permissão para acessar a galeria foi negada!"
@@ -86,6 +86,7 @@ export default function App() {
     }
 
     let resultado = await ImagePicker.launchImageLibraryAsync({
+      // Abre a galeria para selecionar uma imagem
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
@@ -93,15 +94,18 @@ export default function App() {
     });
 
     if (!resultado.canceled) {
-      setFoto(resultado.uri);
-      setFotoTirada(true);
-      setDataHoraFoto(new Date().toLocaleString());
+      // Se uma imagem foi selecionada
+      setFoto(resultado.uri); // Define a URI da imagem selecionada
+      setFotoTirada(true); // Indica que uma foto foi tirada
+      setDataHoraFoto(new Date().toLocaleString()); // Define a data e hora da foto
     }
   };
 
+  // Função para acessar a câmera e tirar uma foto
   const acessarCamera = async () => {
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync(); // Solicita permissão para acessar a câmera do dispositivo
     if (permissionResult.granted === false) {
+      // Se a permissão não foi concedida
       Alert.alert(
         "Permissão negada",
         "Permissão para acessar a câmera foi negada!"
@@ -110,95 +114,119 @@ export default function App() {
     }
 
     let imagem = await ImagePicker.launchCameraAsync({
+      // Abre a câmera para tirar uma foto
       allowsEditing: true,
       aspect: [4, 3],
       quality: 0.5,
     });
 
     if (!imagem.canceled) {
-      setFoto(imagem.assets[0].uri);
-      setFotoTirada(true);
-      setDataHoraFoto(new Date().toLocaleString());
+      // Se uma foto foi tirada
+      setFoto(imagem.assets[0].uri); // Define a URI da foto tirada
+      setFotoTirada(true); // Indica que uma foto foi tirada
+      setDataHoraFoto(new Date().toLocaleString()); // Define a data e hora da foto
     }
   };
 
+  // Função para lidar com o retorno para a foto anterior
   const handleBack = () => {
-    setFoto(null);
-    setFotoTirada(false);
-    setDataHoraFoto(null);
+    setFoto(null); // Limpa a URI da foto
+    setFotoTirada(false); // Indica que nenhuma foto foi tirada
+    setDataHoraFoto(null); // Limpa a data e hora da foto
   };
 
+  // Renderização do componente
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-      <StatusBar />
-      <View style={styles.container}>
-        <Text style={styles.title}>Foto passeio</Text>
-        <TextInput
-          placeholder="Digite o nome do local"
-          placeholderTextColor="white"
-          value={nome}
-          onChangeText={setNome}
-          style={styles.input}
-        />
-        <Pressable style={styles.button} onPress={obterLocalizacao}>
-          <Text style={styles.buttonText}>Obter Localização</Text>
-        </Pressable>
-        {loadingLocation && <ActivityIndicator color="#fff" />}
-        {mapRegion && (
-          <MapView
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-          >
-            <Marker
-              coordinate={{
-                latitude: mapRegion.latitude,
-                longitude: mapRegion.longitude,
-              }}
-              title={nome}
-            />
-          </MapView>
-        )}
-        <View style={styles.photoContainer}>
-          {foto && (
-            <>
-              <Image source={{ uri: foto }} style={styles.image} />
-              {dataHoraFoto && (
-                <Text style={styles.dateText}>{dataHoraFoto}</Text>
-              )}
-            </>
-          )}
-          {fotoTirada && (
-            <Pressable style={styles.backButton} onPress={handleBack}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-              <Text style={styles.backButtonText}>Voltar</Text>
-            </Pressable>
-          )}
-        </View>
-        <Pressable style={styles.button} onPress={escolherFoto}>
-          <Text style={styles.buttonText}>Escolher Foto</Text>
-        </Pressable>
-        <Pressable style={styles.button} onPress={acessarCamera}>
-          <Text style={styles.buttonText}>Tirar Foto</Text>
-        </Pressable>
-        <FlatList
-          data={lugares}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View>
-              <Text>{item.nome}</Text>
-              <Image
-                source={{ uri: item.foto }}
-                style={{ width: 100, height: 100 }}
+      <>
+        <StatusBar />
+
+        {/* View principal do aplicativo */}
+        <View style={styles.container}>
+          {/* Título do aplicativo */}
+          <Text style={styles.title}>Foto passeio</Text>
+
+          {/* Input para inserir o nome do local */}
+          <TextInput
+            placeholder="Digite o nome do local"
+            placeholderTextColor="white"
+            value={nome}
+            onChangeText={setNome}
+            style={styles.input}
+          />
+
+          {/* Botão para obter a localização */}
+          <Pressable style={styles.button} onPress={obterLocalizacao}>
+            <Text style={styles.buttonText}>Obter Localização</Text>
+          </Pressable>
+
+          {/* Mapa para exibir a localização atual */}
+          {mapRegion && (
+            <MapView
+              style={styles.map}
+              region={mapRegion}
+              showsUserLocation={true}
+            >
+              <Marker
+                coordinate={{
+                  latitude: mapRegion.latitude,
+                  longitude: mapRegion.longitude,
+                }}
+                title={nome}
               />
-            </View>
+            </MapView>
           )}
-        />
-      </View>
+
+          {/* Container para exibir a foto */}
+          <View style={styles.photoContainer}>
+            {foto && (
+              <>
+                <Image source={{ uri: foto }} style={styles.image} />
+                {dataHoraFoto && (
+                  <Text style={styles.dateText}>{dataHoraFoto}</Text>
+                )}
+              </>
+            )}
+            {/* Botão para voltar para a foto anterior */}
+            {fotoTirada && (
+              <Pressable style={styles.backButton} onPress={handleBack}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+                <Text style={styles.backButtonText}>Voltar</Text>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Botão para escolher uma foto da galeria */}
+          <Pressable style={styles.button} onPress={escolherFoto}>
+            <Text style={styles.buttonText}>Escolher Foto</Text>
+          </Pressable>
+
+          {/* Botão para acessar a câmera e tirar uma foto */}
+          <Pressable style={styles.button} onPress={acessarCamera}>
+            <Text style={styles.buttonText}>Tirar Foto</Text>
+          </Pressable>
+
+          {/* Lista de lugares visitados */}
+          <FlatList
+            data={lugares}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({ item }) => (
+              <View>
+                <Text>{item.nome}</Text>
+                <Image
+                  source={{ uri: item.foto }}
+                  style={{ width: 100, height: 100 }}
+                />
+              </View>
+            )}
+          />
+        </View>
+      </>
     </ScrollView>
   );
 }
 
+// Estilos do componente
 const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
